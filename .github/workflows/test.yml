@@ -1,0 +1,36 @@
+name: Test Action
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Test action (build only)
+        uses: ./
+        with:
+          image-name: test-app
+          image-prefix: test-
+          push: false
+          context: .
+          dockerfile: ./test/Dockerfile
+          
+  test-with-prefix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Test action with prefix (build only)
+        uses: ./
+        with:
+          image-name: my-app
+          image-prefix: myorg-
+          push: false

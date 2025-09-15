@@ -1,0 +1,18 @@
+# Example: Docker Hub usage with custom prefix
+name: Docker Hub Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: RevoTale/docker-release-action@v1
+        with:
+          registry: docker.io
+          image-name: my-application
+          image-prefix: myorganization/
+          registry-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          registry-password: ${{ secrets.DOCKERHUB_TOKEN }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7

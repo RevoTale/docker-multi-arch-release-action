@@ -1,0 +1,16 @@
+# Example: Basic Usage
+name: Docker Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: RevoTale/docker-release-action@v1
+        with:
+          image-name: my-app

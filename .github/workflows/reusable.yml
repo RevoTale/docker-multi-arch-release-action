@@ -1,0 +1,70 @@
+name: Reusable Docker Build and Push
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        description: 'Name of the Docker image (without prefix)'
+        required: true
+        type: string
+      image-prefix:
+        description: 'Prefix to add to the image name'
+        required: false
+        type: string
+        default: ''
+      context:
+        description: 'Build context path'
+        required: false
+        type: string
+        default: '.'
+      dockerfile:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: './Dockerfile'
+      platforms:
+        description: 'Target platforms for build'
+        required: false
+        type: string
+        default: 'linux/amd64,linux/arm64'
+      registry:
+        description: 'Container registry to push to'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      push:
+        description: 'Push the image to registry'
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      image:
+        description: 'Full image name with tags'
+        value: ${{ jobs.docker-build.outputs.image }}
+      digest:
+        description: 'Image digest'
+        value: ${{ jobs.docker-build.outputs.digest }}
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    outputs:
+      image: ${{ steps.docker-action.outputs.image }}
+      digest: ${{ steps.docker-action.outputs.digest }}
+    steps:
+      - name: Build and Push Docker Image
+        id: docker-action
+        uses: RevoTale/docker-release-action@v1
+        with:
+          registry: ${{ inputs.registry }}
+          image-name: ${{ inputs.image-name }}
+          image-prefix: ${{ inputs.image-prefix }}
+          context: ${{ inputs.context }}
+          dockerfile: ${{ inputs.dockerfile }}
+          platforms: ${{ inputs.platforms }}
+          push: ${{ inputs.push }}

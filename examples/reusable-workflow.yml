@@ -1,0 +1,28 @@
+# Example: Using reusable workflow
+name: Build Multiple Images
+on:
+  release:
+    types: [published]
+
+jobs:
+  api:
+    uses: RevoTale/docker-release-action/.github/workflows/reusable.yml@v1
+    with:
+      image-name: api
+      image-prefix: mycompany-
+      context: ./api
+      dockerfile: ./api/Dockerfile
+    permissions:
+      contents: read
+      packages: write
+      
+  frontend:
+    uses: RevoTale/docker-release-action/.github/workflows/reusable.yml@v1
+    with:
+      image-name: frontend
+      image-prefix: mycompany-
+      context: ./frontend
+      dockerfile: ./frontend/Dockerfile
+    permissions:
+      contents: read
+      packages: write
