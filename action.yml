@@ -19,6 +19,10 @@ inputs:
   password: # For example: secrets.GITHUB_TOKEN 
     required: true
     type: string
+  context:
+    required: false
+    type: string
+    default: '.'
 
 runs:
   using: "composite"
@@ -51,8 +55,8 @@ runs:
         id: push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ inputs.context }}
           push: true
-          platforms: ${{inputs.platforms}}
+          platforms: ${{ inputs.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
