@@ -26,7 +26,10 @@ inputs:
   tags:
     description: 'Custom tags (newline separated). If provided, overrides default branch-based tagging.'
     required: false
-    default: ''
+    default: |
+      type=ref,event=branch
+      type=ref,event=tag
+      type=raw,value=latest,enable={{is_default_branch}}
 
 runs:
   using: "composite"
@@ -52,11 +55,7 @@ runs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ inputs.registry }}/${{ inputs.image-name }}
-          tags: |
-            ${{ inputs.tags }}
-            type=ref,event=branch
-            type=ref,event=tag
-            type=raw,value=latest,enable={{is_default_branch}}
+          tags: ${{ inputs.tags }}
       # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
       # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
