@@ -30,6 +30,11 @@ inputs:
       type=ref,event=branch
       type=ref,event=tag
       type=raw,value=latest,enable={{is_default_branch}}
+  build-args:
+    description: 'Build arguments to pass to docker/build-push-action (newline or comma separated).'
+    required: false
+    type: string
+    default: ''
 
 runs:
   using: "composite"
@@ -68,3 +73,4 @@ runs:
           platforms: ${{ inputs.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ inputs.build-args }}
