@@ -14,6 +14,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Release Please
+        id: release
         uses: googleapis/release-please-action@v4
         with:
           release-type: simple
+
+      - name: Checkout repository
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update major and minor version tags
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          MAJOR_TAG="v${{ steps.release.outputs.major }}"
+          MINOR_TAG="v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}"
+          RELEASE_SHA="${{ steps.release.outputs.sha }}"
+
+          git tag -fa "${MAJOR_TAG}" -m "Release ${MAJOR_TAG}" "${RELEASE_SHA}"
+          git tag -fa "${MINOR_TAG}" -m "Release ${MINOR_TAG}" "${RELEASE_SHA}"
+          git push origin "${MAJOR_TAG}" "${MINOR_TAG}" --force
