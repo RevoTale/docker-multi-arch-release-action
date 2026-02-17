@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/RevoTale/docker-multi-arch-release-action/compare/v1.1.0...v1.2.0) (2026-02-17)
+
+
+### Features
+
+* `v1` format support ([798b967](https://github.com/RevoTale/docker-multi-arch-release-action/commit/798b967537359f6ca520e09c8c9a6d88b85529d5))
+
 ## [1.1.0](https://github.com/RevoTale/docker-multi-arch-release-action/compare/v1.0.5...v1.1.0) (2026-02-04)
 
 
