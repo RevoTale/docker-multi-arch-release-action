@@ -35,7 +35,7 @@ jobs:
 - `build-args` (optional): Newline- or comma-separated build arguments passed to `docker/build-push-action`.
 
 **Tips**
-- Pin to a release tag (for example `@v1.0.5`) for repeatable builds.
+- Use the moving major tag (`@v1`) to receive backward-compatible updates.
 - Use `tags` to ship both a versioned tag and `latest` on releases.
 - Add `build-args` when Dockerfile build arguments are needed.
 
@@ -78,7 +78,7 @@ jobs:
         uses: actions/checkout@v6
       - name: Build and push Docker image
         id: push
-        uses: revotale/docker-multi-arch-release-action@v1.0.5
+        uses: revotale/docker-multi-arch-release-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
