@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/RevoTale/docker-multi-arch-release-action/compare/v1.2.0...v1.3.0) (2026-03-11)
+
+
+### Features
+
+* update docs to use major v ([c6bfd69](https://github.com/RevoTale/docker-multi-arch-release-action/commit/c6bfd698782a311735511e998f4d7e94499ff356))
+
 ## [1.2.0](https://github.com/RevoTale/docker-multi-arch-release-action/compare/v1.1.0...v1.2.0) (2026-02-17)
 
 
