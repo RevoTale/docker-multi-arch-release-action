@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/RevoTale/docker-multi-arch-release-action/compare/v1.3.0...v1.4.0) (2026-03-25)
+
+
+### Features
+
+* ad dockerfile path arg ([16e99b5](https://github.com/RevoTale/docker-multi-arch-release-action/commit/16e99b50e54b551574e5912bdc2d3126261ab039))
+
 ## [1.3.0](https://github.com/RevoTale/docker-multi-arch-release-action/compare/v1.2.0...v1.3.0) (2026-03-11)
 
 
