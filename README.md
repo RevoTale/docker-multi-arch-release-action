@@ -1,14 +1,15 @@
 # docker-multi-arch-release-action
-Build and push multi-architecture Docker images in one friendly, reliable action. Tagging works out of the box from git refs and can be customized whenever a release needs a little extra sparkle.
 
-**Quickstart (push on `main`)**
+Build and push multi-architecture Docker images with ref-based tagging.
+
+## Quick start
+
 ```yaml
 name: Build and Push Docker
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-and-push-docker:
@@ -24,75 +25,45 @@ jobs:
           platforms: linux/amd64,linux/arm64
 ```
 
-**Inputs**
+## Inputs
+
 - `registry` (required): Registry host, for example `ghcr.io`.
 - `platforms` (required): Comma-separated platforms, for example `linux/amd64,linux/arm64`.
 - `username` (required): Registry username.
 - `image-name` (required): Image name without registry prefix.
 - `password` (required): Registry password or token.
-- `context` (optional): Build context path. Default: `.`.
-- `tags` (optional): Newline-separated tags for `docker/metadata-action`. Defaults to ref-based tags.
-- `build-args` (optional): Newline- or comma-separated build arguments passed to `docker/build-push-action`.
-- `provenance` (optional): Provenance attestation setting passed to `docker/build-push-action`, for example `mode=max` or `false`. Empty by default, preserving Docker's repository-aware default.
-- `sbom` (optional): SBOM attestation setting passed to `docker/build-push-action`. Default: `false`.
-- `verify-manifest` (optional): Inspect every published tag and fail if its image manifest cannot be read. Default: `false`.
+- `file` (optional): Dockerfile path.
+- `context` (optional): Build context. Default: `.`.
+- `tags` (optional): Tag rules for `docker/metadata-action`. Default: ref-based tags.
+- `build-args` (optional): Build arguments passed to `docker/build-push-action`.
+- `provenance` (optional): Provenance setting, for example `mode=max` or `false`. Empty by default, which preserves Docker's repository-aware default.
+- `sbom` (optional): SBOM setting passed to `docker/build-push-action`. Default: `false`.
+- `verify-manifest` (optional): Verify every requested platform in every published tag. Default: `false`.
 
-**Tips**
-- Use the moving major tag (`@v1`) to receive backward-compatible updates.
-- Use `tags` to ship both a versioned tag and `latest` on releases.
-- Add `build-args` when Dockerfile build arguments are needed.
-- Set `provenance: mode=max`, `sbom: true`, and `verify-manifest: true` for verifiable release images.
+## Outputs
 
-**Extended Example (Release Please + gated build)**
+- `digest`: Digest of the published image or manifest list.
+
+## Recommended release settings
+
 ```yaml
-name: Semver Release
-
-on:
-  push:
-    branches:
-      - main
-permissions:
-  contents: write
-  pull-requests: write
-  packages: write
-jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      # use fork to work around https://github.com/googleapis/release-please/issues/2265
-      - uses: gvillo/release-please-action@93642002875a0df65de8abeeeabcaeacb7c735f4 # v4.2.1-gvillo
-      # - uses: google-github-actions/release-please-action@v4
-        id: release
-        with:
-          release-type: simple
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-
-  test:
-    uses: ./.github/workflows/test.yml
-
-  build-and-push-docker:
-    runs-on: ubuntu-latest
-    needs: [release-please, test]
-    if: needs.release-please.outputs.release_created == 'true'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-      - name: Build and push Docker image
-        id: push
-        uses: revotale/docker-multi-arch-release-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          image-name: ${{ github.repository }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          tags: |
-            ${{ needs.release-please.outputs.tag_name }}
-            latest
-          platforms: linux/amd64,linux/arm64
-          provenance: mode=max
-          sbom: true
-          verify-manifest: true
+- name: Build and push Docker image
+  id: push
+  uses: revotale/docker-multi-arch-release-action@v1
+  with:
+    registry: ghcr.io
+    username: ${{ github.actor }}
+    image-name: ${{ github.repository }}
+    password: ${{ secrets.GITHUB_TOKEN }}
+    platforms: linux/amd64,linux/arm64
+    provenance: mode=max
+    sbom: true
+    verify-manifest: true
 ```
+
+These options are explicit to keep the `v1` defaults backward compatible. `verify-manifest` runs after publication and fails when any requested platform is absent from any generated tag.
+
+> [!WARNING]
+> Max-mode provenance can publish build argument values. Never pass secrets through `build-args`; use BuildKit secret mounts.
+
+Use the moving major tag (`@v1`) for backward-compatible updates, or pin a release tag for reproducibility.
