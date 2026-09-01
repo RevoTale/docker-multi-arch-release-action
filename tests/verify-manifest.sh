@@ -24,11 +24,6 @@ fi
 arguments="$*"
 image_tag="${!#}"
 
-if [[ "${arguments}" != *" --format "* ]]; then
-  printf 'Name: %s\nManifests:\n  Platform: linux/amd64\n  Platform: linux/arm64\n' "${image_tag}"
-  exit 0
-fi
-
 if [[ "${image_tag}" == *"missing-arm64"* && "${arguments}" == *"linux/arm64"* ]]; then
   printf 'null\n'
   exit 0
@@ -51,6 +46,7 @@ grep -Fq 'ghcr.io/example/app:v1 includes linux/amd64' <<< "${success_output}"
 grep -Fq 'ghcr.io/example/app:v1 includes linux/arm64' <<< "${success_output}"
 grep -Fq 'ghcr.io/example/app:latest includes linux/amd64' <<< "${success_output}"
 grep -Fq 'ghcr.io/example/app:latest includes linux/arm64' <<< "${success_output}"
+printf '%s\n' "${success_output}"
 
 echo "Rejecting a manifest that lacks a requested platform"
 if missing_output="$(run_verifier 'ghcr.io/example/app:missing-arm64' 'linux/amd64,linux/arm64' 2>&1)"; then
@@ -58,6 +54,7 @@ if missing_output="$(run_verifier 'ghcr.io/example/app:missing-arm64' 'linux/amd
   exit 1
 fi
 grep -Fq 'does not include required platform linux/arm64' <<< "${missing_output}"
+printf '%s\n' "${missing_output}"
 
 echo "Rejecting empty tags"
 if empty_output="$(run_verifier '' 'linux/amd64,linux/arm64' 2>&1)"; then
@@ -65,6 +62,7 @@ if empty_output="$(run_verifier '' 'linux/amd64,linux/arm64' 2>&1)"; then
   exit 1
 fi
 grep -Fq 'No published image tags were available to verify.' <<< "${empty_output}"
+printf '%s\n' "${empty_output}"
 
 echo "Rejecting unsafe platform values before template construction"
 if unsafe_output="$(run_verifier 'ghcr.io/example/app:v1' 'linux/amd64;echo-unsafe' 2>&1)"; then
@@ -72,5 +70,6 @@ if unsafe_output="$(run_verifier 'ghcr.io/example/app:v1' 'linux/amd64;echo-unsa
   exit 1
 fi
 grep -Fq 'Invalid platform value' <<< "${unsafe_output}"
+printf '%s\n' "${unsafe_output}"
 
 echo "Manifest verifier behavior is valid"

@@ -39,7 +39,6 @@ while IFS= read -r raw_image_tag; do
 
   tag_count=$((tag_count + 1))
   printf 'Inspecting %s\n' "${image_tag}"
-  docker buildx imagetools inspect "${image_tag}"
 
   for platform in "${platforms[@]}"; do
     format="{{json (index .Image \"${platform}\")}}"
