@@ -33,11 +33,15 @@ jobs:
 - `context` (optional): Build context path. Default: `.`.
 - `tags` (optional): Newline-separated tags for `docker/metadata-action`. Defaults to ref-based tags.
 - `build-args` (optional): Newline- or comma-separated build arguments passed to `docker/build-push-action`.
+- `provenance` (optional): Provenance attestation setting passed to `docker/build-push-action`, for example `mode=max` or `false`. Empty by default, preserving Docker's repository-aware default.
+- `sbom` (optional): SBOM attestation setting passed to `docker/build-push-action`. Default: `false`.
+- `verify-manifest` (optional): Inspect every published tag and fail if its image manifest cannot be read. Default: `false`.
 
 **Tips**
 - Use the moving major tag (`@v1`) to receive backward-compatible updates.
 - Use `tags` to ship both a versioned tag and `latest` on releases.
 - Add `build-args` when Dockerfile build arguments are needed.
+- Set `provenance: mode=max`, `sbom: true`, and `verify-manifest: true` for verifiable release images.
 
 **Extended Example (Release Please + gated build)**
 ```yaml
@@ -88,4 +92,7 @@ jobs:
             ${{ needs.release-please.outputs.tag_name }}
             latest
           platforms: linux/amd64,linux/arm64
+          provenance: mode=max
+          sbom: true
+          verify-manifest: true
 ```

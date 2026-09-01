@@ -19,7 +19,7 @@ inputs:
   image-name:
     required: true
     type: string
-  password: # For example: secrets.GITHUB_TOKEN 
+  password: # For example: secrets.GITHUB_TOKEN
     required: true
     type: string
   context:
@@ -38,6 +38,18 @@ inputs:
     required: false
     type: string
     default: ''
+  provenance:
+    description: 'Provenance attestation setting passed to docker/build-push-action. Leave empty to use its default.'
+    required: false
+    default: ''
+  sbom:
+    description: 'SBOM attestation setting passed to docker/build-push-action.'
+    required: false
+    default: 'false'
+  verify-manifest:
+    description: 'Inspect every published image tag after the build to verify that its manifest is readable.'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
@@ -46,35 +58,56 @@ runs:
         # Add support for more platforms with QEMU (optional)
         # https://github.com/docker/setup-qemu-action
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
-      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
+      # Uses the `docker/login-action` action to log in to the container registry.
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
-          registry: ${{ inputs.registry }} 
+          registry: ${{ inputs.registry }}
           username: ${{ inputs.username }}
           password: ${{ inputs.password }}
-      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      # Extract tags and labels for the published image.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ${{ inputs.registry }}/${{ inputs.image-name }}
           tags: ${{ inputs.tags }}
-      # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
-      # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
-      # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ${{ inputs.context }}
           push: true
-          file: ${{inputs.file}}
+          file: ${{ inputs.file }}
           platforms: ${{ inputs.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: ${{ inputs.build-args }}
+          provenance: ${{ inputs.provenance }}
+          sbom: ${{ inputs.sbom }}
+      - name: Verify published image manifests
+        if: ${{ inputs.verify-manifest == 'true' }}
+        shell: bash
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+
+          verified=0
+          while IFS= read -r image_tag; do
+            if [[ -z "${image_tag}" ]]; then
+              continue
+            fi
+
+            docker buildx imagetools inspect "${image_tag}"
+            verified=1
+          done <<< "${IMAGE_TAGS}"
+
+          if [[ "${verified}" -ne 1 ]]; then
+            echo "No published image tags were available to verify." >&2
+            exit 1
+          fi
