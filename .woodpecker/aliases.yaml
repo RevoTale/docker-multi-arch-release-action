@@ -1,0 +1,41 @@
+when:
+  - event: [pull_request, release]
+
+steps:
+  - name: test-aliases
+    image: ghcr.io/revotale/ci/base:v0.1.8@sha256:c59b01e74acd309c9c775f594917df6d9f8cad93fdfa7f40408aebeb5140f414
+    when:
+      - event: pull_request
+    commands:
+      - |
+        set -eu
+        fixture=$$(mktemp -d)
+        cp scripts/update-release-aliases.sh "$fixture/"
+        cd "$fixture"
+        git init --bare remote.git
+        git init source
+        cd source
+        git remote add origin ../remote.git
+        git -c user.name=CI -c user.email=ci@example.invalid commit --allow-empty -m initial
+        sh ../update-release-aliases.sh v1.4.0
+        git -c user.name=CI -c user.email=ci@example.invalid commit --allow-empty -m subsequent
+        sh ../update-release-aliases.sh v1.4.1
+        for alias in v1 v1.4; do
+          test "$$(git --git-dir=../remote.git rev-parse "refs/tags/$alias")" = "$$(git rev-parse HEAD)"
+        done
+
+  - name: update-aliases
+    image: ghcr.io/revotale/ci/base:v0.1.8@sha256:c59b01e74acd309c9c775f594917df6d9f8cad93fdfa7f40408aebeb5140f414
+    when:
+      - event: release
+    environment:
+      FORGE_TOKEN:
+        from_secret: forge_token
+    commands:
+      - |
+        set -eu
+        export GIT_TERMINAL_PROMPT=0
+        export GIT_CONFIG_COUNT=1
+        export GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
+        export GIT_CONFIG_VALUE_0="Authorization: Basic $$(printf 'x-access-token:%s' "$FORGE_TOKEN" | base64 -w0)"
+        sh scripts/update-release-aliases.sh "$CI_COMMIT_TAG"
