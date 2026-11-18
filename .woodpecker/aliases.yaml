@@ -21,7 +21,8 @@ steps:
         git -c user.name=CI -c user.email=ci@example.invalid commit --allow-empty -m subsequent
         sh ../update-release-aliases.sh v1.4.1
         for alias in v1 v1.4; do
-          test "$$(git --git-dir=../remote.git rev-parse "refs/tags/$alias")" = "$$(git rev-parse HEAD)"
+          test "$$(git --git-dir=../remote.git cat-file -t "refs/tags/$alias")" = tag
+          test "$$(git --git-dir=../remote.git rev-parse "refs/tags/$alias^{commit}")" = "$$(git rev-parse HEAD)"
         done
 
   - name: update-aliases
